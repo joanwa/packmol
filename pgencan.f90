@@ -21,9 +21,9 @@ subroutine pgencan(n,x,fx)
   use usegencan
   implicit none
 
-  double precision :: l(nn), lambda(1), rho(1), u(nn), wd(8*nn)
+  double precision :: lambda(1), rho(1), wd(8*nn)
   double precision :: epsgpsn,gpsupn,delmin
-  double precision :: x(nn), fx, g(nn)
+  double precision :: x(nn), l(nn), u(nn), fx, g(nn)
   double precision, parameter :: twopi = 2.d0 * 3.1415925655d0
   integer :: m,iprint,maxfc,ncomp,iter,fcnt,gcnt,cgcnt,inform
   integer :: wi(nn)

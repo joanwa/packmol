@@ -26,7 +26,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
              imol, ntry, ntfix, nb, iboxx, iboxy, iboxz, ifatom, &
              idfatom, iftype, jatom, nloop
 
-  double precision :: x(nn), cmx, cmy, &
+  double precision :: x(nn), l(nn), u(nn), cmx, cmy, &
                       cmz, fx, xlength, dbox, rnd, discale, precision, &
                       movefrac, sidemax, radmax
   double precision, parameter :: twopi = 2.d0 * 3.1415925655d0
@@ -104,15 +104,55 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   write(*,*) '  z: [ ', sizemin(3),', ', sizemax(3), ' ] '
   write(*,*) ' If the system is larger than this, increase the sidemax parameter. '
 
+
+  ! Setup upper and lower bounds for variables. Usually there are none,
+  ! but one might want to restrict the rotation of the molecules in one
+  ! or more axis
+
+  do i = 1,n/2
+    l(i) = - 1.0d+20
+    u(i) =   1.0d+20
+  end do
+  i = n/2
+  do itype = 1, ntype
+    do imol = 1, nmols(itype)
+      if ( constrain_rot(itype,1) ) then
+        l(i+1) = rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2))
+        u(i+1) = rot_bound(itype,1,1) + dabs(rot_bound(itype,1,2))
+      else
+        l(i+1) =   0.0d0
+        u(i+1) =   1.0d0 * twopi
+      end if
+      if ( constrain_rot(itype,2) ) then
+        l(i+2) = rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2))
+        u(i+2) = rot_bound(itype,2,1) + dabs(rot_bound(itype,2,2))
+      else
+        l(i+2) =   0.0d0
+        u(i+2) =   1.0d0 * twopi
+      end if
+      if ( constrain_rot(itype,3) ) then
+        l(i+3) = rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2))
+        u(i+3) = rot_bound(itype,3,1) + dabs(rot_bound(itype,3,2))
+      else
+        l(i+3) =   0.0d0
+        u(i+3) =   1.0d0 * twopi
+      end if
+      i = i + 3
+    end do
+  end do
+
+
   ! Create first aleatory guess
 
   do i = 1, n/2 - 2, 3
-    x(i) = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
+    x(i)   = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
     x(i+1) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2))
     x(i+2) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3))
   end do
-  do i = n/2 + 1, n
-    x(i) = twopi * rnd(isem)
+  do i = n/2 + 1, n - 2, 3
+    x(i)   = l(i)   + rnd(isem)*(u(i)-l(i))
+    x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
+    x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
   end do
  
   ! Use the largest radius as the reference for binning the box
@@ -301,8 +341,10 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   ! Building random initial point 
 
   write(*,*) ' Building random initial point ... '
-  do i = n/2 + 1, n
-    x(i) = twopi * rnd(isem)
+  do i = n/2 + 1, n - 2, 3
+    x(i)   = l(i)   + rnd(isem)*(u(i)-l(i))
+    x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
+    x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
   end do
   ilubar = 0
   do itype = 1, ntype
