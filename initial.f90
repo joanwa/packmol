@@ -104,7 +104,6 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   write(*,*) '  z: [ ', sizemin(3),', ', sizemax(3), ' ] '
   write(*,*) ' If the system is larger than this, increase the sidemax parameter. '
 
-
   ! Setup upper and lower bounds for variables. Usually there are none,
   ! but one might want to restrict the rotation of the molecules in one
   ! or more axis
@@ -120,22 +119,22 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
         l(i+1) = rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2))
         u(i+1) = rot_bound(itype,1,1) + dabs(rot_bound(itype,1,2))
       else
-        l(i+1) =   0.0d0
-        u(i+1) =   1.0d0 * twopi
+        l(i+1) = 0.0d0
+        u(i+1) = 1.0d0 * twopi
       end if
       if ( constrain_rot(itype,2) ) then
         l(i+2) = rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2))
         u(i+2) = rot_bound(itype,2,1) + dabs(rot_bound(itype,2,2))
       else
-        l(i+2) =   0.0d0
-        u(i+2) =   1.0d0 * twopi
+        l(i+2) = 0.0d0
+        u(i+2) = 1.0d0 * twopi
       end if
       if ( constrain_rot(itype,3) ) then
         l(i+3) = rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2))
         u(i+3) = rot_bound(itype,3,1) + dabs(rot_bound(itype,3,2))
       else
-        l(i+3) =   0.0d0
-        u(i+3) =   1.0d0 * twopi
+        l(i+3) = 0.0d0
+        u(i+3) = 1.0d0 * twopi
       end if
       i = i + 3
     end do
@@ -145,7 +144,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   ! Create first aleatory guess
 
   do i = 1, n/2 - 2, 3
-    x(i)   = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
+    x(i) = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
     x(i+1) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2))
     x(i+2) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3))
   end do

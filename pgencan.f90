@@ -48,22 +48,22 @@ subroutine pgencan(n,x,fx)
         l(i+1) = rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2))
         u(i+1) = rot_bound(itype,1,1) + dabs(rot_bound(itype,1,2))
       else
-        l(i+1) =   0.0d0
-        u(i+1) =   1.0d0 * twopi
+        l(i+1) = 0.0d0
+        u(i+1) = 1.0d0 * twopi
       end if
       if ( constrain_rot(itype,2) ) then
         l(i+2) = rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2))
         u(i+2) = rot_bound(itype,2,1) + dabs(rot_bound(itype,2,2))
       else
-        l(i+2) =   0.0d0
-        u(i+2) =   1.0d0 * twopi
+        l(i+2) = 0.0d0
+        u(i+2) = 1.0d0 * twopi
       end if
       if ( constrain_rot(itype,3) ) then
         l(i+3) = rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2))
         u(i+3) = rot_bound(itype,3,1) + dabs(rot_bound(itype,3,2))
       else
-        l(i+3) =   0.0d0
-        u(i+3) =   1.0d0 * twopi
+        l(i+3) = 0.0d0
+        u(i+3) = 1.0d0 * twopi
       end if
       i = i + 3
     end do
