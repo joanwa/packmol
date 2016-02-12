@@ -8,3 +8,20 @@
 !  as published by the Free Software Foundation; either version 2
 !  of the License, or (at your option) any later version.
 !  
+!
+! Subroutine that computes the function value
+!
+!
+
+subroutine feasy(x,f) 
+      
+  use sizes
+  use molpa
+  implicit none
+
+  double precision x(nn), f
+  call feasyseq(x,f)
+
+  return
+end subroutine feasy
+

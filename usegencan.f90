@@ -8,3 +8,10 @@
 !  as published by the Free Software Foundation; either version 2
 !  of the License, or (at your option) any later version.
 !  
+! Optimization variables passed as common go pgencan
+
+module usegencan
+
+  integer :: maxit, iprint1, iprint2
+
+end module usegencan
