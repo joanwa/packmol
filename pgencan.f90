@@ -24,6 +24,7 @@ subroutine pgencan(n,x,fx)
   double precision :: l(nn), lambda(1), rho(1), u(nn), wd(8*nn)
   double precision :: epsgpsn,gpsupn,delmin
   double precision :: x(nn), fx, g(nn)
+  double precision, parameter :: twopi = 2.d0 * 3.1415925655d0
   integer :: m,iprint,maxfc,ncomp,iter,fcnt,gcnt,cgcnt,inform
   integer :: wi(nn)
   integer :: n, i
@@ -47,22 +48,22 @@ subroutine pgencan(n,x,fx)
         l(i+1) = rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2))
         u(i+1) = rot_bound(itype,1,1) + dabs(rot_bound(itype,1,2))
       else
-        l(i+1) = - 1.0d+20
-        u(i+1) =   1.0d+20
+        l(i+1) =   0.0d0
+        u(i+1) =   1.0d0 * twopi
       end if
       if ( constrain_rot(itype,2) ) then
         l(i+2) = rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2))
         u(i+2) = rot_bound(itype,2,1) + dabs(rot_bound(itype,2,2))
       else
-        l(i+2) = - 1.0d+20
-        u(i+2) =   1.0d+20
+        l(i+2) =   0.0d0
+        u(i+2) =   1.0d0 * twopi
       end if
       if ( constrain_rot(itype,3) ) then
         l(i+3) = rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2))
         u(i+3) = rot_bound(itype,3,1) + dabs(rot_bound(itype,3,2))
       else
-        l(i+3) = - 1.0d+20
-        u(i+3) =   1.0d+20
+        l(i+3) =   0.0d0
+        u(i+3) =   1.0d0 * twopi
       end if
       i = i + 3
     end do

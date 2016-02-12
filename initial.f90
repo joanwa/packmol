@@ -106,7 +106,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
 
   ! Create first aleatory guess
 
-  do i = 1, n/2, 3
+  do i = 1, n/2 - 2, 3
     x(i) = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
     x(i+1) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2))
     x(i+2) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3))
