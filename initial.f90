@@ -144,12 +144,13 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   ! Create first aleatory guess
 
   do i = 1, n/2 - 2, 3
-    x(i) = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
+    x(i)  =  sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
     x(i+1) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2))
     x(i+2) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3))
   end do
   do i = n/2 + 1, n - 2, 3
-    x(i)   = l(i)   + rnd(isem)*(u(i)-l(i))
+	! where does this order come from?: x(i),x(i+1),x(i+2) = z,x,y; eulerrmats order is y,z,x
+    x(i)   = l(i)   + rnd(isem)*(u(i)  -l(i))
     x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
     x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
   end do
@@ -341,7 +342,8 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
 
   write(*,*) ' Building random initial point ... '
   do i = n/2 + 1, n - 2, 3
-    x(i)   = l(i)   + rnd(isem)*(u(i)-l(i))
+	! where does this order come from?: x(i),x(i+1),x(i+2) = z,x,y; eulerrmats order is y,z,x
+    x(i)   = l(i)   + rnd(isem)*(u(i)  -l(i))
     x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
     x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
   end do
