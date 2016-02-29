@@ -13,7 +13,7 @@
 !                     builds the initial point
 !
 
-subroutine initial(isem,randini,x,n,ntfix,fix,&
+subroutine initial(seed,randini,x,n,ntfix,fix,&
                    moldy,chkgrad,nloop,discale,precision,sidemax,&
                    movefrac,movebadrandom,check)
 
@@ -22,11 +22,11 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   use usegencan
   implicit none
 
-  integer :: isem, n, i, j, k, idatom, iatom, ilubar, icart, itype, &
+  integer :: seed, n, i, j, k, idatom, iatom, ilubar, icart, itype, &
              imol, ntry, ntfix, nb, iboxx, iboxy, iboxz, ifatom, &
              idfatom, iftype, jatom, nloop
 
-  double precision :: x(nn), l(nn), u(nn), cmx, cmy, &
+  double precision :: x(nn), cmx, cmy, &
                       cmz, fx, xlength, dbox, rnd, discale, precision, &
                       movefrac, sidemax, radmax
   double precision, parameter :: twopi = 2.d0 * 3.1415925655d0
@@ -91,7 +91,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
     x(i) = 0.d0
     x(i+ntotmol*3) = 0.d0
   end do
-  call restmol(1,0,n,x,fx,.true.,precision,isem)
+  call restmol(1,0,n,x,fx,.true.,precision,seed)
   sizemin(1) = x(1) - sidemax 
   sizemax(1) = x(1) + sidemax
   sizemin(2) = x(2) - sidemax
@@ -104,57 +104,37 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   write(*,*) '  z: [ ', sizemin(3),', ', sizemax(3), ' ] '
   write(*,*) ' If the system is larger than this, increase the sidemax parameter. '
 
-  ! Setup upper and lower bounds for variables. Usually there are none,
-  ! but one might want to restrict the rotation of the molecules in one
-  ! or more axis
+  ! Create first aleatory guess
 
-  do i = 1,n/2
-    l(i) = - 1.0d+20
-    u(i) =   1.0d+20
-  end do
-  i = n/2
+  i = 1
   do itype = 1, ntype
     do imol = 1, nmols(itype)
+      x(i) = sizemin(1) + rnd(seed)*(sizemax(1)-sizemin(1))
+      x(i+1) = sizemin(2) + rnd(seed)*(sizemax(2)-sizemin(2))
+      x(i+2) = sizemin(3) + rnd(seed)*(sizemax(3)-sizemin(3))
+      j = i + ntotmol*3
       if ( constrain_rot(itype,1) ) then
-        l(i+1) = rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2))
-        u(i+1) = rot_bound(itype,1,1) + dabs(rot_bound(itype,1,2))
+        x(j) = ( rot_bound(itype,1,1) - dabs(rot_bound(itype,1,2)) ) + &
+               2.d0*rnd(seed)*dabs(rot_bound(itype,1,2))
       else
-        l(i+1) = 0.0d0
-        u(i+1) = 1.0d0 * twopi
+        x(j) = twopi*rnd(seed)
       end if
       if ( constrain_rot(itype,2) ) then
-        l(i+2) = rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2))
-        u(i+2) = rot_bound(itype,2,1) + dabs(rot_bound(itype,2,2))
+        x(j+1) = ( rot_bound(itype,2,1) - dabs(rot_bound(itype,2,2)) ) + &
+                 2.d0*rnd(seed)*dabs(rot_bound(itype,2,2))
       else
-        l(i+2) = 0.0d0
-        u(i+2) = 1.0d0 * twopi
+        x(j+1) = twopi*rnd(seed)
       end if
       if ( constrain_rot(itype,3) ) then
-        l(i+3) = rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2))
-        u(i+3) = rot_bound(itype,3,1) + dabs(rot_bound(itype,3,2))
+        x(j+2) = ( rot_bound(itype,3,1) - dabs(rot_bound(itype,3,2)) ) + &
+                 2.d0*rnd(seed)*dabs(rot_bound(itype,3,2))
       else
-        l(i+3) = 0.0d0
-        u(i+3) = 1.0d0 * twopi
+        x(j+2) = twopi*rnd(seed)
       end if
       i = i + 3
     end do
   end do
 
-
-  ! Create first aleatory guess
-
-  do i = 1, n/2 - 2, 3
-    x(i)   = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
-    x(i+1) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2))
-    x(i+2) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3))
-  end do
-  do i = n/2 + 1, n - 2, 3
-	! where does this order come from?: x(i),x(i+1),x(i+2) = z,x,y; eulerrmats order is y,z,x
-    x(i)   = l(i)   + rnd(isem)*(u(i)  -l(i))
-    x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
-    x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
-  end do
- 
   ! Use the largest radius as the reference for binning the box
 
   radmax = 0.d0
@@ -195,7 +175,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
     if(fx.gt.precision) then 
       write(*,"( a,i6,a,i6 )")'  Moving worst molecules ... ', i,' of ',nloop/10
       movebadprint = .false.
-      call movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadprint)
+      call movebad(n,x,fx,movefrac,movebadrandom,precision,seed,hasbad,movebadprint)
     end if
   end do
   write(*,*) 
@@ -341,11 +321,8 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
   ! Building random initial point 
 
   write(*,*) ' Building random initial point ... '
-  do i = n/2 + 1, n - 2, 3
-	! where does this order come from?: x(i),x(i+1),x(i+2) = z,x,y; eulerrmats order is y,z,x
-    x(i)   = l(i)   + rnd(isem)*(u(i)  -l(i))
-    x(i+1) = l(i+1) + rnd(isem)*(u(i+1)-l(i+1))
-    x(i+2) = l(i+2) + rnd(isem)*(u(i+2)-l(i+2))
+  do i = n/2 + 1, n
+    x(i) = twopi * rnd(seed)
   end do
   ilubar = 0
   do itype = 1, ntype
@@ -355,9 +332,9 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
       overlap = .false.
       do while((overlap.or.fx.gt.precision).and.ntry.le.20) 
         ntry = ntry + 1
-        x(ilubar+1) = cmxmin(itype) + rnd(isem)*(cmxmax(itype)-cmxmin(itype))
-        x(ilubar+2) = cmymin(itype) + rnd(isem)*(cmymax(itype)-cmymin(itype))
-        x(ilubar+3) = cmzmin(itype) + rnd(isem)*(cmzmax(itype)-cmzmin(itype))
+        x(ilubar+1) = cmxmin(itype) + rnd(seed)*(cmxmax(itype)-cmxmin(itype))
+        x(ilubar+2) = cmymin(itype) + rnd(seed)*(cmymax(itype)-cmymin(itype))
+        x(ilubar+3) = cmzmin(itype) + rnd(seed)*(cmzmax(itype)-cmzmin(itype))
         if(fix) then
           call setibox(x(ilubar+1),x(ilubar+2),x(ilubar+3),&
                        sizemin,boxl,nboxes,iboxx,iboxy,iboxz)
@@ -381,7 +358,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
           end if
         end if  
         if(.not.overlap) call restmol(itype,ilubar,n,x,fx,.false.,&
-                                      precision,isem)
+                                      precision,seed)
       end do
       ilubar = ilubar + 3
     end do
@@ -405,7 +382,7 @@ subroutine initial(isem,randini,x,n,ntfix,fix,&
     if(fx.gt.precision) then
       write(*,"( a,i6,a,i6 )")'  Moving worst molecules ... ', i,' of ',nloop/10
       movebadprint = .false.
-      call movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadprint)
+      call movebad(n,x,fx,movefrac,movebadrandom,precision,seed,hasbad,movebadprint)
     end if
   end do
   write(*,*) 
@@ -466,32 +443,6 @@ subroutine resetboxes(nboxes,latomfirst,latomfix)
 
   return
 end subroutine resetboxes
-
-! 
-! Random number generator
-! 
-
-integer function mult( p, q) 
-  
-  integer :: p, q, p0, p1, q0, q1 
-  
-  p1 = p/10000 
-  p0 = mod(p,10000) 
-  q1 = q/10000 
-  q0 = mod(q,10000) 
-  mult = mod( mod( p0*q1+p1*q0,10000)*10000+p0*q0,100000000) 
-
-  return 
-end function mult
- 
-double precision function rnd(sem) 
-  
-  integer :: sem, mult 
-  sem = mod( mult( sem, 3141581) + 1, 100000000) 
-  rnd = sem/100000000.0d0 
-
-  return 
-end function rnd
 
 !
 ! subroutine tobar: moves molecules to their baricentres
@@ -564,14 +515,14 @@ end subroutine setibox
 !                     in the restraint region
 !  
 
-subroutine restmol(itype,ilubar,n,x,fx,solve,precision,isem)
+subroutine restmol(itype,ilubar,n,x,fx,solve,precision,seed)
 
   use sizes
   use molpa
   use usegencan
   implicit none
 
-  integer :: n, nsafe, ntotsafe, itype, i, ilubar, nmoltype, isem, ip1, ip2
+  integer :: n, nsafe, ntotsafe, itype, i, ilubar, nmoltype, seed, ip1, ip2
   double precision :: xmol(nn), x(nn), fx, precision
   logical :: solve, compsafe(maxtype), initsafe
 

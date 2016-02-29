@@ -11,13 +11,11 @@
 !
 ! Subroutine getinp: subroutine that reads the input file
 !
-!
-!
 
 subroutine getinp(dism,precision,sidemax,&
                   ntype,nlines,nrest,&
                   natoms,idfirst,nconnect,maxcon,nmols,&
-                  isem,&
+                  seed,&
                   discale,nloop,&
                   irestline,ityperest,linestrut,&
                   coor,amass,charge,restpars,&
@@ -37,7 +35,7 @@ subroutine getinp(dism,precision,sidemax,&
                       sidemax
 
   integer :: i, j, k, ii, iarg, iline, nlines, idatom, iatom,&
-             in, lixo, irest, itype, itest, isem, imark, ntype, nrest,&
+             in, lixo, irest, itype, itest, seed, imark, ntype, nrest,&
              nmols(maxtype), natoms(maxtype), idfirst(maxtype),&
              ityperest(maxrest), irestline(maxrest),&
              linestrut(maxtype,2), maxcon(maxatom),&
@@ -112,7 +110,7 @@ subroutine getinp(dism,precision,sidemax,&
 
   ! Getting random seed and optional optimization parameters if set
 
-  isem = 19128787
+  seed = 1234567
   randini = .false.
   check = .false.
   chkgrad = .false.
@@ -133,8 +131,9 @@ subroutine getinp(dism,precision,sidemax,&
   ioerr = 0
   do i = 1, nlines
     if(keyword(i,1).eq.'seed') then
-      read(keyword(i,2),*,iostat=ioerr) isem
+      read(keyword(i,2),*,iostat=ioerr) seed
       if ( ioerr /= 0 ) exit
+      if ( seed == -1 ) call seed_from_time(seed)
     else if(keyword(i,1).eq.'randominitialpoint') then
       randini = .true.
     else if(keyword(i,1).eq.'check') then
@@ -191,13 +190,48 @@ subroutine getinp(dism,precision,sidemax,&
       read(keyword(i,2),*,iostat=ioerr) iprint2
       if ( ioerr /= 0 ) exit
       write(*,*) ' Optional printvalue 2 set: ', iprint2
+    else if( keyword(i,1) /= 'tolerance' .and. &
+             keyword(i,1) /= 'structure' .and. &
+             keyword(i,1) /= 'end' .and. &
+             keyword(i,1) /= 'atoms' .and. &
+             keyword(i,1) /= 'output' .and. &
+             keyword(i,1) /= 'filetype' .and. &
+             keyword(i,1) /= 'number' .and. &
+             keyword(i,1) /= 'inside' .and. &
+             keyword(i,1) /= 'outside' .and. &
+             keyword(i,1) /= 'fixed' .and. &
+             keyword(i,1) /= 'center' .and. &
+             keyword(i,1) /= 'centerofmass' .and. &
+             keyword(i,1) /= 'over' .and. &
+             keyword(i,1) /= 'below' .and. &
+             keyword(i,1) /= 'constrain_rotation' .and. &
+             keyword(i,1) /= 'radius' .and. &
+             keyword(i,1) /= 'resnumbers' .and. &
+             keyword(i,1) /= 'changechains' .and. &
+             keyword(i,1) /= 'discale' .and. &
+             keyword(i,1) /= 'maxit' .and. &
+             keyword(i,1) /= 'movebadrandom' .and. &
+             keyword(i,1) /= 'add_amber_ter' .and. &
+             keyword(i,1) /= 'sidemax' .and. &
+             keyword(i,1) /= 'seed' .and. &
+             keyword(i,1) /= 'randominitialpoint' .and. &
+             keyword(i,1) /= 'nloop' .and. &
+             keyword(i,1) /= 'writeout' .and. &
+             keyword(i,1) /= 'writebad' .and. &
+             keyword(i,1) /= 'check' .and. &
+             keyword(i,1) /= 'iprint1' .and. &
+             keyword(i,1) /= 'iprint2' .and. &
+             keyword(i,1) /= 'chkgrad' ) then
+      write(*,*) ' ERROR: Keyword not recognized: ', trim(keyword(i,1))
+      stop
     end if
   end do
   if ( ioerr /= 0 ) then
     write(*,*) ' ERROR: Some optional keyword was not used correctly: ', trim(keyword(i,1))
     stop
   end if
-  write(*,*) ' Seed for random number generator: ', isem
+  write(*,*) ' Seed for random number generator: ', seed
+  call init_random_number(seed)
 
   ! Searching for filetypes, default is pdb
 
@@ -1516,7 +1550,7 @@ subroutine checkpoint(n,x,amass,&
                       irestline,linestrut,maxcon,ntcon,nconnect,&
                       ele,pdbfile,xyzout,name,&
                       pdb,tinker,xyz,moldy,fix,&
-                      movefrac,movebadrandom,precision,isem,resnumbers,&
+                      movefrac,movebadrandom,precision,seed,resnumbers,&
                       add_amber_ter,add_box_sides,add_sides_fix,&
                       input_itype,thisisfixed,changechains)
 
@@ -1538,7 +1572,7 @@ subroutine checkpoint(n,x,amass,&
   integer :: i, charl
   integer :: n, nrest, ntfix
   integer :: resnumbers(maxtype)
-  integer :: nloop, isem
+  integer :: nloop, seed
   integer :: input_itype(maxtype)
 
   character(len=3) :: ele(maxatom)
@@ -1609,7 +1643,7 @@ subroutine checkpoint(n,x,amass,&
     iprint2 = 0
     call pgencan(n,x,fx)
     movebadprint = .false.
-    call movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadprint) 
+    call movebad(n,x,fx,movefrac,movebadrandom,precision,seed,hasbad,movebadprint) 
   end do
   init1 = .false.
 

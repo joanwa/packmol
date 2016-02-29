@@ -61,6 +61,7 @@ oall = cenmass.o \
        packmol.o \
        polartocart.o \
        heuristics.o \
+       random.o \
        sizes.o \
        usegencan.o \
        molpa.o
@@ -136,6 +137,8 @@ pgencan.o : pgencan.f90 $(modules)
 	@$(FORTRAN) $(FLAGS) -c pgencan.f90
 gencan.o : gencan.f
 	@$(FORTRAN) $(FLAGS) -c gencan.f 
+random.o : random.f90 
+	@$(FORTRAN) $(FLAGS) -c random.f90
 # Compiled for serial version only
 feasy.o : feasy.f90 $(modules)   
 	@$(FORTRAN) $(FLAGS) -c feasy.f90

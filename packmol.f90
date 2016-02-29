@@ -53,7 +53,7 @@ program packmol
   integer :: linesttmp1, linesttmp2, jtype
   integer :: ntmol, n, iftype, icart, imol, iicart, iline_atoms
   integer :: i, iline, iiatom, iat, iirest, iratcount, ival
-  integer :: isem
+  integer :: seed
   integer :: nloop, loop
   integer :: maxcon(maxatom)
   integer :: ntcon(9), nconnect(maxatom,8) 
@@ -103,7 +103,7 @@ program packmol
              ' generation of starting configurations for',        /&
              ' molecular dynamics. ',/&
              ' ',/&
-             t42,' Version 15.287 ',/&
+             t42,' Version 16.060 ',/&
              ,/,62('#'),               /,/)")
       
   ! Reading input file
@@ -111,7 +111,7 @@ program packmol
   call getinp(dism,precision,sidemax,&
               ntype,nlines,nrest,&
               natoms,idfirst,nconnect,maxcon,nmols,&
-              isem,&
+              seed,&
               discale,nloop,&
               irestline,ityperest,linestrut,&
               coor,amass,charge,restpars,&
@@ -494,6 +494,12 @@ program packmol
             write(*,*) ' Rotations about z axis of molecules of ',&
                        ' type ', itype, ' will be constrained. '
           end if
+          if ( keyword(iline,2) /= 'x' .and. &
+               keyword(iline,2) /= 'y' .and. &
+               keyword(iline,2) /= 'z' ) then
+            write(*,*) ' ERROR: constrain_rotation option not properly defined (not x, y, or z) '
+            stop
+          end if
         end if
       end if
     end do
@@ -522,7 +528,7 @@ program packmol
   ! (Re)setting parameters and building initial point
   !
 
-  call initial(isem,randini,x,n,ntfix,fix,moldy,&
+  call initial(seed,randini,x,n,ntfix,fix,moldy,&
                chkgrad,nloop,discale,precision,sidemax,&
                movefrac,movebadrandom,check)
 
@@ -663,7 +669,7 @@ program packmol
 
       if(radscale == 1.d0 .and. fimp.le.10.d0) then
         movebadprint = .true.
-        call movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadprint)
+        call movebad(n,x,fx,movefrac,movebadrandom,precision,seed,hasbad,movebadprint)
         flast = fx
       end if
 
@@ -674,7 +680,7 @@ program packmol
                         irestline,linestrut,maxcon,ntcon,nconnect,&
                         ele,pdbfile,xyzout,name,&
                         pdb,tinker,xyz,moldy,fix,&
-                        movefrac,movebadrandom,precision,isem,resnumbers,&
+                        movefrac,movebadrandom,precision,seed,resnumbers,&
                         add_amber_ter,add_box_sides,add_sides_fix,&
                         input_itype,thisisfixed,changechains)
         stop

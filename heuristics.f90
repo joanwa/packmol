@@ -13,7 +13,7 @@
 !            positions
 !
 
-subroutine movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadprint)
+subroutine movebad(n,x,fx,movefrac,movebadrandom,precision,seed,hasbad,movebadprint)
 
   use sizes
   use molpa
@@ -25,7 +25,7 @@ subroutine movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadpr
 
   ! Internal variables
   integer :: n, i, icart, itype, iatom, imol, ilubar, ilugan, &
-             ilubar2, ilugan2, nbad, isem, igood, ibad, nmove
+             ilubar2, ilugan2, nbad, seed, igood, ibad, nmove
   double precision :: x(nn), fx, fmol(maxatom), movefrac, rnd, &
                       precision, frac, radiuswork(maxatom)
   logical :: movebadprint, hasbad, movebadrandom
@@ -109,24 +109,24 @@ subroutine movebad(n,x,fx,movefrac,movebadrandom,precision,isem,hasbad,movebadpr
         end do
         do i = 1, nmove
           ibad = nmols(itype) - i + 1 
-          igood = int(rnd(isem)*nmols(itype)*frac) + 1
+          igood = int(rnd(seed)*nmols(itype)*frac) + 1
           ilubar = 3*(indflash(ibad)+imol-1)
           ilugan = 3*(indflash(ibad)+imol-1)+3*ntotmol
           ilubar2 = 3*(indflash(igood)+imol-1)
           ilugan2 = 3*(indflash(igood)+imol-1)+3*ntotmol
           if ( movebadrandom ) then
-            x(ilubar+1) = sizemin(1) + rnd(isem)*(sizemax(1)-sizemin(1))
-            x(ilubar+2) = sizemin(2) + rnd(isem)*(sizemax(2)-sizemin(2)) 
-            x(ilubar+3) = sizemin(3) + rnd(isem)*(sizemax(3)-sizemin(3)) 
+            x(ilubar+1) = sizemin(1) + rnd(seed)*(sizemax(1)-sizemin(1))
+            x(ilubar+2) = sizemin(2) + rnd(seed)*(sizemax(2)-sizemin(2)) 
+            x(ilubar+3) = sizemin(3) + rnd(seed)*(sizemax(3)-sizemin(3)) 
           else
-            x(ilubar+1) = x(ilubar2+1) - 0.3*dmax(itype)+0.6*rnd(isem)*dmax(itype) 
-            x(ilubar+2) = x(ilubar2+2) - 0.3*dmax(itype)+0.6*rnd(isem)*dmax(itype)
-            x(ilubar+3) = x(ilubar2+3) - 0.3*dmax(itype)+0.6*rnd(isem)*dmax(itype)
+            x(ilubar+1) = x(ilubar2+1) - 0.3*dmax(itype)+0.6*rnd(seed)*dmax(itype) 
+            x(ilubar+2) = x(ilubar2+2) - 0.3*dmax(itype)+0.6*rnd(seed)*dmax(itype)
+            x(ilubar+3) = x(ilubar2+3) - 0.3*dmax(itype)+0.6*rnd(seed)*dmax(itype)
           end if
           x(ilugan+1) = x(ilugan2+1)
           x(ilugan+2) = x(ilugan2+2)
           x(ilugan+3) = x(ilugan2+3)
-          call restmol(itype,ilubar,n,x,fx,.true.,precision,isem)
+          call restmol(itype,ilubar,n,x,fx,.true.,precision,seed)
         end do             
       end if
     end if
