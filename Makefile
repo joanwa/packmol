@@ -12,30 +12,17 @@
 #
 #          make 
 #
-# The default compilation compiles only the serial version of packmol.
-#
-# If you want to compile with some specific fortran compiler, or
-# to enable the parallel implementation, you must change the line
-# below to the path of your fortran compiler. The parallel version
-# must be compiled with a compiler compatible with gfortran version 4.2.
+# If you want to compile with some specific fortran compiler,
+# you must change the line below to the path of your fortran compiler.
 #
 FORTRAN = /usr/bin/gfortran
 #
 # Change "AUTO" to the fortran command you want. After changing
-# this line, you have two options: compile the parallel version
-# of packmol (if the compiler is gfortran >= 4.2 or other openmp
-# compatible compiler), or compile the serial version.
-# To compile the parallel version type
-#
-#          make parallel
+# this line, compile the package.
 #
 # Change the flags of the compilation if you want:
 #
 FLAGS= -O3 -ffast-math 
-#
-# Flags for the compilation of the parallel version
-#
-OPENMPFLAGS = -fopenmp 
  
 ###################################################################
 #                                                                 #
@@ -56,6 +43,7 @@ oall = cenmass.o \
        gencan.o \
        pgencan.o \
        initial.o \
+       title.o \
        io.o \
 	 fgcommon.o \
        packmol.o \
@@ -64,45 +52,31 @@ oall = cenmass.o \
        random.o \
        sizes.o \
        usegencan.o \
-       molpa.o
-oserial = feasy.o geasy.o
-oparallel = feasyparallel.o geasyparallel.o compindexes.o
+       molpa.o \
+       feasy.o \
+       geasy.o
 #
-# Linking the serial version
+# Linking 
 #
-serial : $(oall) $(oserial)
+all : $(oall)
 	@echo " ------------------------------------------------------ " 
 	@echo " Compiling packmol with $(FORTRAN) " 
 	@echo " Flags: $(FLAGS) " 
 	@echo " ------------------------------------------------------ " 
-	@$(FORTRAN) -o packmol $(oall) $(oserial) $(FLAGS) 
+	@$(FORTRAN) -o packmol $(oall) $(FLAGS) 
 	@\rm -f *.mod *.o
 	@echo " ------------------------------------------------------ " 
 	@echo " Packmol succesfully built." 
 	@echo " ------------------------------------------------------ " 
 #
-# Linking the parallel version
-#
-parallel : $(oall) $(oparallel) ppackmol
-	@echo " ------------------------------------------------------ " 
-	@echo " Compiling packmol with $(FORTRAN) " 
-	@echo " Flags: $(FLAGS) $(OPENMPFLAGS)" 
-	@echo " ------------------------------------------------------ "
-	@$(FORTRAN) -o packmol $(oall) $(oparallel) $(FLAGS) $(OPENMPFLAGS) 
-	@chmod +x ppackmol
-	@\rm -f *.mod *.o
-	@echo " ------------------------------------------------------ " 
-	@echo " Packmol succesfully built. Paralell version available. " 
-	@echo " ------------------------------------------------------ " 
-#
 # Compiling with flags for development
 #
-devel : $(oall) $(oserial)
+devel : $(oall) 
 	@echo " ------------------------------------------------------ " 
 	@echo " Compiling packmol with $(FORTRAN) " 
-	@echo " Flags: -Wunused"
+	@echo " Flags: -Wunused -fcheck=bounds"
 	@echo " ------------------------------------------------------ "
-	@$(FORTRAN) -o packmol $(oall) $(oserial) -Wunused 
+	@$(FORTRAN) -o packmol $(oall) -Wunused -fcheck=bounds 
 	@echo " ------------------------------------------------------ " 
 	@echo " Packmol succesfully built. " 
 	@echo " ------------------------------------------------------ " 
@@ -123,6 +97,8 @@ cenmass.o : cenmass.f90 $(modules)
 	@$(FORTRAN) $(FLAGS) -c cenmass.f90
 initial.o : initial.f90 $(modules)
 	@$(FORTRAN) $(FLAGS) -c initial.f90
+title.o : title.f90 
+	@$(FORTRAN) $(FLAGS) -c title.f90
 io.o : io.f90  $(modules)
 	@$(FORTRAN) $(FLAGS) -c io.f90
 fgcommon.o : fgcommon.f90 $(modules)
@@ -133,26 +109,16 @@ polartocart.o : polartocart.f90 $(modules)
 	@$(FORTRAN) $(FLAGS) -c polartocart.f90
 heuristics.o : heuristics.f90 $(modules)   
 	@$(FORTRAN) $(FLAGS) -c heuristics.f90
+random.o : random.f90 $(modules)   
+	@$(FORTRAN) $(FLAGS) -c random.f90
 pgencan.o : pgencan.f90 $(modules)
 	@$(FORTRAN) $(FLAGS) -c pgencan.f90
 gencan.o : gencan.f
 	@$(FORTRAN) $(FLAGS) -c gencan.f 
-random.o : random.f90 
-	@$(FORTRAN) $(FLAGS) -c random.f90
-# Compiled for serial version only
 feasy.o : feasy.f90 $(modules)   
 	@$(FORTRAN) $(FLAGS) -c feasy.f90
 geasy.o : geasy.f90 $(modules)   
 	@$(FORTRAN) $(FLAGS) -c geasy.f90
-#
-# Compiled for parallel version only
-#
-feasyparallel.o : feasyparallel.f90 $(modules)   
-	@$(FORTRAN) $(FLAGS) $(OPENMPFLAGS) -c feasyparallel.f90
-geasyparallel.o : geasyparallel.f90 $(modules)   
-	@$(FORTRAN) $(FLAGS) $(OPENMPFLAGS) -c geasyparallel.f90
-compindexes.o : compindexes.f90 $(modules)   
-	@$(FORTRAN) $(FLAGS) $(OPENMPFLAGS) -c compindexes.f90
 #
 # Clean build files
 #
